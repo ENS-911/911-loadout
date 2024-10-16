@@ -1,6 +1,23 @@
 .tableWrap {
     width: 100%;
+    max-width: 1700px;
     table-layout: fixed;
+    box-shadow: 0px 12px 18px #333;
+    margin: 0 auto;
+}
+
+.tableWrap thead th {
+    background-color: #333;
+    color: white;
+    padding: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.tableWrap th {
+    text-align: center;
+    padding: 12px;
 }
 
 .tableWrap tr:nth-child(odd) {
@@ -11,4 +28,10 @@
     text-align: center;
     width: 1%;
     padding: 12px 0;
+}
+
+.tableWrap th span {
+    margin-left: 5px;
+    font-size: 12px;
+    color: #ccc;
 }
