@@ -39,7 +39,10 @@ async function dataGrab() {
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         
         activeData = await response.json();
-        console.log(activeData);
+        console.log("Active data fetched", activeData);
+        
+        // Trigger sort bar and table loading after data is fetched
+        sortBarTrigger(); 
         tableTrigger(); // Trigger table loading after data is fetched
     } catch (error) {
         console.error('Error fetching client information:', error.message);
@@ -48,16 +51,50 @@ async function dataGrab() {
 
 // Trigger table script
 function tableTrigger() {
-    loadScript('https://ensloadout.911emergensee.com/ens-packages/components/live-tables/lt0.js');
+    loadScript('https://ensloadout.911emergensee.com/ens-packages/components/live-tables/lt0.js', function() {
+        console.log("Table script loaded. Checking for initialSortByDate...");
+        // Ensure table script is fully loaded and will use the `activeData`
+        if (typeof window.initialSortByDate === 'function') {
+            console.log('initialSortByDate is defined.');
+            window.initialSortByDate(); // This will render the table using activeData
+        } else {
+            console.error('Table script is loaded, but initialSortByDate is not defined.');
+        }
+    });
     loadStylesheet('https://ensloadout.911emergensee.com/ens-packages/components/live-tables/lt0.css');
 }
 
-// Trigger sort bar script (to be implemented)
+// Wait until renderTableBody is available before initializing sort bar
+function waitForRenderTableBody(callback) {
+    const checkInterval = setInterval(function() {
+        if (typeof window.renderTableBody === 'function') {
+            console.log("renderTableBody is defined. Proceeding with sort bar setup.");
+            clearInterval(checkInterval);
+            callback();
+        } else {
+            console.log("Waiting for renderTableBody to become available...");
+        }
+    }, 100); // Check every 100ms
+}
+
+// Trigger sort bar script
 function sortBarTrigger() {
-    loadScript('https://ensloadout.911emergensee.com/ens-packages/components/sort-bars/sb0.js');
+    loadScript('https://ensloadout.911emergensee.com/ens-packages/components/sort-bars/sb0.js', function () {
+        console.log("Sort bar script loaded. Checking for renderTableBody...");
+        
+        // Wait for renderTableBody to become available before proceeding
+        waitForRenderTableBody(function() {
+            console.log("Initializing sort bar...");
+            createSortBar({
+                rootDiv: sortBlock,  // Place the sort bar in the sortBlock div
+                updateTable: window.renderTableBody, // Function to update the table
+                hasMap: false,  // No map in Bronze
+                activeData: activeData // Data to filter
+            });
+        });
+    });
     loadStylesheet('https://ensloadout.911emergensee.com/ens-packages/components/sort-bars/sb0.css');
 }
 
 // Load the table and sort bar on page load
-//sortBarTrigger(); // Load the sort bar
-dataGrab(); // Fetch the data and load the table
+dataGrab(); // Fetch the data and load the table + sort bar

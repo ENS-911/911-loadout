@@ -1,0 +1,75 @@
+/* sb0.css */
+#ENSLoadOut {
+    margin-top: 20px;
+}
+/* Sort Bar Styles */
+#sortBar {
+    width: 100%;
+    max-width: 1700px;
+    margin: 0 auto;
+  }
+  
+  #topSection {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    align-items: flex-end;
+  }
+  
+  .leftSection {
+    width: 20%;
+    background-color: white;
+    color: red;
+    text-align: center;
+    border-radius: 1.5rem 1.5rem 0 0;
+    height: 90px;
+    font-size: 1.2rem;
+    line-height: 100px;
+    position: relative;
+    z-index: 2;
+    border: 1px solid black;
+    border-bottom: none;
+  }
+  
+  .rightSection {
+    width: 80%;
+    color: #fff;
+    background-color: rgba(57, 52, 52, 0.9);
+    border: 0.13rem solid;
+    border-width: 0.13rem 0.13rem 0 0;
+    border-top-right-radius: 0.42rem;
+    padding: 15px;
+    margin-left: -30px; /* Overlap with left section */
+    height: 70px;
+    box-sizing: border-box;
+  }
+  
+  .rightSection p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+  
+  #statusFilters {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  #statusFilters label {
+    font-size: 0.85rem;
+  }
+  
+  #bottomSection {
+    display: flex;
+    justify-content: space-around;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+    padding: 15px;
+  }
+  
+  #bottomSection select {
+    padding: 10px;
+    width: 30%;
+    border-radius: 5px;
+    font-size: 1rem;
+  }
+  
