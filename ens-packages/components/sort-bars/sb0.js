@@ -144,10 +144,12 @@ function createSortBar(options) {
         // Call renderTableBody with the filtered data or full data if all filters are set to "All"
         if (selectedType === 'all' && selectedAgency === 'all' && selectedArea === 'all' && selectedStatus === 'all') {
             console.log("All filters set to 'All'. Showing full data.");
-            renderTableBody(activeData); // Reset to full data when all filters are 'all'
+            //renderTableBody(activeData); // Reset to full data when all filters are 'all'
+            mapDraw(activeData)
         } else {
             console.log("Filtered Data: ", filteredData);
-            renderTableBody(filteredData); // Show filtered data
+            //renderTableBody(filteredData); // Show filtered data
+            mapDraw(filteredData)
         }
 
         // Update dropdowns based on the filtered data (optional, to dynamically adjust)
