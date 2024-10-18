@@ -1,0 +1,57 @@
+/* Main sort bar container */
+#sortBar {
+    position: relative;
+    max-width: 1700px;
+    margin: 0 auto;
+}
+
+/* Top section that overlaps the map */
+#topSection {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;  /* This ensures it overlaps the map */
+    bottom: -30px;  /* Adjust based on the height of the map */
+    width: 100%;
+    z-index: 100;  /* Ensure it appears above the map */
+}
+
+/* Left section styling ("Active Incidents") */
+.leftSection {
+    background-color: red;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+    padding: 10px;
+    width: 20%;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    height: 60px;  /* Adjust the height as needed */
+    z-index: 110;  /* Ensure it's on top of the right section */
+}
+
+/* Right section (radio buttons) */
+.rightSection {
+    background-color: rgba(57, 52, 52, 0.9);
+    border: 0.13rem solid;
+    border-width: 0.13rem 0.13rem 0 0;
+    border-top-right-radius: 0.42rem;
+    color: #fff;
+    padding: 15px;
+    flex-grow: 1;
+    z-index: 105;
+}
+
+/* Bottom section with dropdowns */
+#bottomSection {
+    margin-top: 70px;  /* Push down the dropdowns */
+    display: flex;
+    justify-content: space-between;
+}
+
+#bottomSection select {
+    padding: 8px;
+    margin: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}

@@ -280,7 +280,6 @@ function mapRun() {
             weatherActivate();
         });
     }
-    tableTrigger()
 }
 
 mapRun();
