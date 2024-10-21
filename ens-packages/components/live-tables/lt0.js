@@ -1,8 +1,12 @@
-(function() {
-  const tableDiv = document.getElementById("tableBlock");
+function createTable(options) {
+  const { rootDiv, activeData } = options;
+
+  const tableBlock = document.createElement('div');
+  tableBlock.id = 'tableBlock';
+  rootDiv.appendChild(tableBlock);
 
   const tableWrap = document.createElement("table");
-  tableDiv.appendChild(tableWrap);
+  tableBlock.appendChild(tableWrap);
   tableWrap.className = "tableWrap";
 
   // Create table header (thead)
@@ -59,7 +63,7 @@
           });
 
           // Clear and re-render the table body with the sorted data
-          window.renderTableBody(activeData); // Pass the sorted activeData
+          renderTableBody(activeData); // Pass the sorted activeData
       });
 
       headerRow.appendChild(th);
@@ -136,12 +140,15 @@
       });
 
       // Render the sorted table
-      window.renderTableBody(activeData); // Pass the sorted activeData
+      renderTableBody(activeData); // Pass the sorted activeData
   }
 
-  // Expose functions globally for external use
-  window.renderTableBody = renderTableBody;
-  window.initialSortByDate = initialSortByDate;
+  // Return the functions so they can be used externally
+  return {
+      renderTableBody,
+      initialSortByDate
+  };
+}
 
-  console.log("renderTableBody and initialSortByDate are now globally accessible");
-})();
+// Call this function elsewhere in your code like this:
+// const { renderTableBody, initialSortByDate } = createTable({ rootDiv, activeData });

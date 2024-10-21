@@ -29,6 +29,8 @@ async function preLoad() {
     await loadScript('https://ensloadout.911emergensee.com/ens-packages/components/map/map.js');
     await loadScript('https://ensloadout.911emergensee.com/ens-packages/components/sort-bars/sb0.js');
     loadStylesheet('https://ensloadout.911emergensee.com/ens-packages/components/sort-bars/sb0.css');
+    await loadScript('https://ensloadout.911emergensee.com/ens-packages/components/live-tables/lt0.js');
+    loadStylesheet('https://ensloadout.911emergensee.com/ens-packages/components/live-tables/lt0.css');
 
     dataGrab();
 }
@@ -47,38 +49,54 @@ async function dataGrab() {
 }
 
 async function launch() {
-    await createCountBar({
-        rootDiv: rootDiv
-    });
+    // Initialize count bar
+    await createCountBar({ rootDiv });
+
+    // Initialize the map
     await mapRun({
         rootDiv: rootDiv,
         countyCode: countyCode,
         activeData: activeData
     });
+
+    // Create the sort bar
     await createSortBar({
         rootDiv: rootDiv,
         activeData: activeData,
-        updateMap: function(filteredData) {
-            // This function updates the map with filtered data
-            mapRun({
-                rootDiv: rootDiv,
-                countyCode: countyCode,
-                activeData: filteredData
-            });
-        },
+        updateTable: updateTableAndMap,  // Function to update both the table and map
+        updateMap: updateTableAndMap,    // Function to update both the map and table
         hasMap: true
+    });
+
+    // Initialize the table
+    const { renderTableBody, initialSortByDate } = createTable({
+        rootDiv: rootDiv,
+        activeData: activeData
+    });
+
+    // Make these functions globally accessible
+    window.renderTableBody = renderTableBody;
+    window.initialSortByDate = initialSortByDate;
+
+    // Sort table by date initially
+    window.initialSortByDate();
+
+    // Render the initial table
+    window.renderTableBody(activeData);
+}
+
+
+// Function to update both table and map based on filtered data
+function updateTableAndMap(filteredData) {
+    // Update table
+    window.renderTableBody(filteredData);
+
+    // Update map
+    mapRun({
+        rootDiv: rootDiv,
+        countyCode: countyCode,
+        activeData: filteredData
     });
 }
 
-// Function to update markers without re-initializing the entire map
-function updateMapMarkers(filteredData) {
-    // Clear existing markers from the map
-    if (map && map.clearMarkers) {
-        map.clearMarkers(); // Assuming mapRun exposes clearMarkers
-    }
-
-    // Add filtered data to the map
-    map.addMarkers(filteredData); // Assuming mapRun exposes addMarkers
-}
-
-preLoad()
+preLoad();
