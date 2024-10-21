@@ -1,0 +1,12 @@
+/* Main sort bar container */
+#sortBar {
+    position: relative;
+    max-width: 1700px;
+    margin: 0 auto;
+    top: -90px;
+}
+
+#tableBlock {
+    position: relative;
+    top: -90px;
+}
