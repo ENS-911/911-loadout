@@ -130,31 +130,40 @@ function createSortBar(options) {
         const selectedAgency = filterByAgency.value;
         const selectedArea = filterByArea.value;
         const selectedStatus = document.querySelector('input[name="status"]:checked').value;
-
+    
         // Filter the data based on the selected filters
         const filteredData = activeData.filter(item => {
             const typeMatch = selectedType === 'all' || item.type === selectedType;
             const agencyMatch = selectedAgency === 'all' || item.agency_type === selectedAgency;
             const areaMatch = selectedArea === 'all' || item.db_city === selectedArea;
             const statusMatch = selectedStatus === 'all' || item.status === selectedStatus;
-
+    
             return typeMatch && agencyMatch && areaMatch && statusMatch;
         });
-
-        // Call renderTableBody with the filtered data or full data if all filters are set to "All"
+    
+        // Call `mapRun` with the filtered data or full data if all filters are set to "All"
         if (selectedType === 'all' && selectedAgency === 'all' && selectedArea === 'all' && selectedStatus === 'all') {
             console.log("All filters set to 'All'. Showing full data.");
-            //renderTableBody(activeData); // Reset to full data when all filters are 'all'
-            mapDraw(activeData)
+            // Call `mapRun` with the full activeData (unfiltered)
+            mapRun({
+                rootDiv: rootDiv,
+                countyCode: countyCode,
+                activeData: activeData // Pass full data when all filters are 'all'
+            });
         } else {
             console.log("Filtered Data: ", filteredData);
-            //renderTableBody(filteredData); // Show filtered data
-            mapDraw(filteredData)
+            // Call `mapRun` with the filtered data
+            mapRun({
+                rootDiv: rootDiv,
+                countyCode: countyCode,
+                activeData: filteredData // Pass filtered data
+            });
         }
-
+    
         // Update dropdowns based on the filtered data (optional, to dynamically adjust)
         updateDropdownOptions(filteredData);
     }
+    
 
     // Function to update the dropdown options dynamically based on filtered data (optional)
     function updateDropdownOptions(filteredData) {

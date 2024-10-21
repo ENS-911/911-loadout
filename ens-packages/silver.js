@@ -70,10 +70,15 @@ async function launch() {
     });
 }
 
-function mapLoad() {
-    if(hasMap == true) {
-        mapDraw();
+// Function to update markers without re-initializing the entire map
+function updateMapMarkers(filteredData) {
+    // Clear existing markers from the map
+    if (map && map.clearMarkers) {
+        map.clearMarkers(); // Assuming mapRun exposes clearMarkers
     }
+
+    // Add filtered data to the map
+    map.addMarkers(filteredData); // Assuming mapRun exposes addMarkers
 }
 
 preLoad()

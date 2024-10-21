@@ -1,40 +1,42 @@
+let markers = [];  // Store markers globally
+let countyCords = "";
+let latitude = "";
+let longitude = "";
+let centcord = "";
+let alertStatus = "off";
+let warnings = [];
+let warningData = [];
+let watch = [];
+let weatherData = "";
+
 async function mapRun(options) {
     const { rootDiv, countyCode, activeData } = options;
 
-    if (map) {
-        map.remove(); // Ensure previous map instance is removed
-    }
+    if (!map) {
+        // Create and append the map div (only once)
+        const mapArea = document.createElement("div");
+        mapArea.id = "map";
+        mapArea.style.height = "800px";
+        rootDiv.appendChild(mapArea);
 
-    const mapArea = document.createElement("div");
-    mapArea.id = "map";
-    mapArea.style.height = "800px";
-    rootDiv.appendChild(mapArea);
+        mapboxgl.accessToken = 'pk.eyJ1Ijoid29tYmF0MTk3MiIsImEiOiJjbDdycmxjNXIwaTJ1M3BudXB2ZTZoZm1tIn0.v-NAvl8Ba0yPtAtxOt9iTg';  // Replace with your actual Mapbox access token.
 
-    let countyCords = "";
-    let latitude = "";
-    let longitude = "";
-    let centcord = "";
-    let alertStatus = "off";
-    let warnings = [];
-    let warningData = [];
-    let watch = [];
-    let weatherData = "";
+        // Wait for county coordinates and weather data to be fetched before initializing the map
+        try {
+            await countyCordsGrab();  // Fetch and set county coordinates
+            await countyWeatherGrab();  // Fetch weather data
 
-    mapboxgl.accessToken = 'pk.eyJ1Ijoid29tYmF0MTk3MiIsImEiOiJjbDdycmxjNXIwaTJ1M3BudXB2ZTZoZm1tIn0.v-NAvl8Ba0yPtAtxOt9iTg';
-
-    // Wait for county coordinates and weather data to be fetched before initializing the map
-    try {
-        await countyCordsGrab();    // Fetch and set county coordinates (latitude and longitude)
-        await countyWeatherGrab();  // Fetch weather data (warnings, etc.)
-
-        // Check if we have valid coordinates before initializing the map
-        if (longitude && latitude && !isNaN(longitude) && !isNaN(latitude)) {
-            mapDraw();  // Initialize the map now that coordinates are available
-        } else {
-            console.error('Invalid coordinates for map center:', { latitude, longitude });
+            if (longitude && latitude && !isNaN(longitude) && !isNaN(latitude)) {
+                mapDraw();  // Initialize the map now that coordinates are available
+            } else {
+                console.error('Invalid coordinates for map center:', { latitude, longitude });
+            }
+        } catch (error) {
+            console.error("Error during map initialization:", error);
         }
-    } catch (error) {
-        console.error("Error during map initialization:", error);
+    } else {
+        // Map already exists, just update markers based on filtered data
+        updateMarkers(activeData);
     }
 
     // Fetch county coordinates
@@ -42,7 +44,7 @@ async function mapRun(options) {
         try {
             const response = await fetch(`https://api.weather.gov/zones/county/${countyCode}`);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-            
+
             const countyData = await response.json();
             countyCords = countyData.geometry.coordinates;
 
@@ -53,7 +55,6 @@ async function mapRun(options) {
             let [lon, lat] = centcord;
             longitude = parseFloat(lon);
             latitude = parseFloat(lat);
-
             console.log(`Coordinates for map center: Latitude (${latitude}), Longitude (${longitude})`);
         } catch (error) {
             console.error('Error fetching county coordinates:', error.message);
@@ -68,7 +69,7 @@ async function mapRun(options) {
 
             const countyWeatherData = await response.json();
             weatherData = countyWeatherData;
-            processWeatherData(weatherData);  // Process weather data
+            processWeatherData(weatherData);  // Process the fetched weather data
         } catch (error) {
             console.error('Error fetching weather data:', error.message);
         }
@@ -85,7 +86,7 @@ async function mapRun(options) {
                     if (alertStatus === "off") {
                         alertStatus = "Watch";
                     }
-                    watch.push(item.properties.headline);
+                    watch.push(item);
                 }
             });
         } else {
@@ -94,32 +95,40 @@ async function mapRun(options) {
         }
     }
 
-    // Draw the map with the fetched coordinates
+    // Initialize and draw the map (only once)
     function mapDraw() {
-        // Initialize the map with the fetched longitude and latitude
         map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/standard',
-            center: [longitude, latitude],  // Set map center using fetched coordinates
+            center: [longitude, latitude],
             zoom: 10
         });
 
         map.addControl(new mapboxgl.FullscreenControl());
 
-        // Add markers or routes from `activeData`
+        // Add markers initially based on activeData
         addMarkers(activeData);
 
-        // Add weather-related layers if applicable
+        // If there are weather alerts, add the weather layer
         if (alertStatus !== "off") {
             addWeatherLayer();
         }
 
-        // Handle loading of polygon layers or routes based on county boundaries
+        // Add county boundary layer
         addCountyBoundaryLayer();
     }
 
-    // Add markers based on `activeData`
+    // Add markers based on activeData (runs only once during initial map creation)
     function addMarkers(data) {
+        updateMarkers(data);  // Call updateMarkers for adding markers during initialization
+    }
+
+    // Update markers dynamically without reloading the map
+    function updateMarkers(data) {
+        // Remove existing markers
+        markers.forEach(marker => marker.remove());
+        markers = [];
+
         const icons = {
             'Fire': 'https://ensloadout.911emergensee.com/ens-packages/icopacks/0/fire.png',
             'Law': 'https://ensloadout.911emergensee.com/ens-packages/icopacks/0/police.png',
@@ -128,8 +137,7 @@ async function mapRun(options) {
         };
 
         data.forEach(point => {
-            const iconType = point.agency_type;
-            const iconUrl = icons[iconType] || icons['Road Closure'];
+            const iconUrl = icons[point.agency_type] || icons['Road Closure'];
 
             const el = document.createElement('div');
             el.className = 'custom-marker';
@@ -138,14 +146,16 @@ async function mapRun(options) {
             el.style.height = '37px';
             el.style.backgroundSize = 'cover';
 
-            new mapboxgl.Marker(el)
+            const marker = new mapboxgl.Marker(el)
                 .setLngLat([point.longitude, point.latitude])
                 .setPopup(new mapboxgl.Popup().setHTML(`<h3>${point.battalion}</h3><p>${point.type}</p>`))
                 .addTo(map);
+
+            markers.push(marker);  // Store marker reference for future updates
         });
     }
 
-    // Add a layer for county boundaries
+    // Add county boundary layer
     function addCountyBoundaryLayer() {
         map.on('load', function () {
             if (countyCords.length > 0) {
@@ -176,15 +186,15 @@ async function mapRun(options) {
         });
     }
 
-    // Add weather layer if needed (e.g., warnings)
+    // Add weather layer if there are alerts
     function addWeatherLayer() {
-        map.on('load', function() {
+        map.on('load', function () {
             map.addLayer({
                 "id": "weather-layer",
                 "type": "raster",
                 "source": {
                     "type": "raster",
-                    "tiles": ["https://tile.openweathermap.org/map/precipitation/{z}/{x}/{y}.png?appid=bfa689a00c0a5864039c9e7396f1e745"],
+                    "tiles": ["https://tile.openweathermap.org/map/precipitation/{z}/{x}/{y}.png?appid=your-openweathermap-api-key"],
                     "tileSize": 256
                 },
                 "layout": {
@@ -194,22 +204,22 @@ async function mapRun(options) {
         });
     }
 
-    // Function to calculate the centroid of coordinates
+    // Calculate the centroid of coordinates
     function findCentroid(coordsArray) {
         let latSum = 0;
         let lonSum = 0;
         let count = 0;
 
-        coordsArray.forEach(coordBlock => {
-            coordBlock.forEach(coords => {
-                coords.forEach(coord => {
-                    latSum += coord[0];
-                    lonSum += coord[1];
-                    count++;
-                });
-            });
+        coordsArray[0].forEach(coord => {  // Access the first polygon
+            if (coord.length === 2) {  // Ensure valid [lon, lat] pair
+                lonSum += coord[0];  // Longitude
+                latSum += coord[1];  // Latitude
+                count++;
+            }
         });
 
-        return [latSum / count, lonSum / count];
+        if (count === 0) return [NaN, NaN];  // Avoid division by zero
+
+        return [lonSum / count, latSum / count];  // Return [longitude, latitude]
     }
 }
