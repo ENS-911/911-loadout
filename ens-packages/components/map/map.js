@@ -222,4 +222,6 @@ async function mapRun(options) {
 
         return [lonSum / count, latSum / count];  // Return [longitude, latitude]
     }
+
+    window.updateMap = updateMarkers;
 }

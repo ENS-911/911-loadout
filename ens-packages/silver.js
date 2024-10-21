@@ -63,14 +63,25 @@ async function launch() {
     await createSortBar({
         rootDiv: rootDiv,
         activeData: activeData,
-        updateTable: updateTableAndMap,  // Function to update both the table and map
-        updateMap: updateTableAndMap,    // Function to update both the map and table
+        updateTable: function(filteredData) {
+            // Update the table with the filtered data
+            if (window.renderTableBody) {
+                window.renderTableBody(filteredData);
+            }
+        },
+        updateMap: function(filteredData) {
+            // Update the map with the filtered data
+            if (window.updateMap) {
+                window.updateMap(filteredData);
+            }
+        },
         hasMap: true
     });
 
     // Initialize the table
     const { renderTableBody, initialSortByDate } = createTable({
         rootDiv: rootDiv,
+        updateTable: window.renderTableBody,
         activeData: activeData
     });
 
@@ -83,20 +94,6 @@ async function launch() {
 
     // Render the initial table
     window.renderTableBody(activeData);
-}
-
-
-// Function to update both table and map based on filtered data
-function updateTableAndMap(filteredData) {
-    // Update table
-    window.renderTableBody(filteredData);
-
-    // Update map
-    mapRun({
-        rootDiv: rootDiv,
-        countyCode: countyCode,
-        activeData: filteredData
-    });
 }
 
 preLoad();

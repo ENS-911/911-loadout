@@ -141,29 +141,19 @@ function createSortBar(options) {
             return typeMatch && agencyMatch && areaMatch && statusMatch;
         });
     
-        // Call `mapRun` with the filtered data or full data if all filters are set to "All"
-        if (selectedType === 'all' && selectedAgency === 'all' && selectedArea === 'all' && selectedStatus === 'all') {
-            console.log("All filters set to 'All'. Showing full data.");
-            // Call `mapRun` with the full activeData (unfiltered)
-            mapRun({
-                rootDiv: rootDiv,
-                countyCode: countyCode,
-                activeData: activeData // Pass full data when all filters are 'all'
-            });
-        } else {
-            console.log("Filtered Data: ", filteredData);
-            // Call `mapRun` with the filtered data
-            mapRun({
-                rootDiv: rootDiv,
-                countyCode: countyCode,
-                activeData: filteredData // Pass filtered data
-            });
+        // Update the map with the filtered data
+        if (updateMap) {
+            updateMap(filteredData);
         }
     
-        // Update dropdowns based on the filtered data (optional, to dynamically adjust)
-        updateDropdownOptions(filteredData);
-    }
+        // Update the table with the filtered data
+        if (updateTable) {
+            updateTable(filteredData);
+        }
     
+        // Optionally, update the dropdowns based on the filtered data
+        updateDropdownOptions(filteredData);
+    }  
 
     // Function to update the dropdown options dynamically based on filtered data (optional)
     function updateDropdownOptions(filteredData) {

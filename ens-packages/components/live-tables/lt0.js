@@ -149,6 +149,3 @@ function createTable(options) {
       initialSortByDate
   };
 }
-
-// Call this function elsewhere in your code like this:
-// const { renderTableBody, initialSortByDate } = createTable({ rootDiv, activeData });
