@@ -97,7 +97,7 @@ async function mapRun(options) {
 
     // Initialize and draw the map (only once)
     function mapDraw() {
-        map = new mapboxgl.Map({
+        window.map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/standard',
             center: [longitude, latitude],

@@ -26,6 +26,8 @@ async function preLoad() {
     loadStylesheet('https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css');
     await loadScript('https://ensloadout.911emergensee.com/ens-packages/components/count-bars/cb0.js');
     loadStylesheet('https://ensloadout.911emergensee.com/ens-packages/components/count-bars/cb0.css');
+    loadStylesheet('https://ensloadout.911emergensee.com/ens-packages/components/weather-bar/weatherbar0.css');
+    await loadScript('https://ensloadout.911emergensee.com/ens-packages/components/weather-bar/weatherbar0.js');
     await loadScript('https://ensloadout.911emergensee.com/ens-packages/components/map/map.js');
     await loadScript('https://ensloadout.911emergensee.com/ens-packages/components/sort-bars/sb0.js');
     loadStylesheet('https://ensloadout.911emergensee.com/ens-packages/components/sort-bars/sb0.css');
@@ -51,6 +53,11 @@ async function dataGrab() {
 async function launch() {
     // Initialize count bar
     await createCountBar({ rootDiv });
+
+    await createWeatherBar({
+        rootDiv: rootDiv,
+        activeData: activeData
+    });
 
     // Initialize the map
     await mapRun({
