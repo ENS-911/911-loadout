@@ -21,7 +21,7 @@ let countyCode = ""
 rootDiv.innerHTML = "";
 
 async function preLoad() {
-    loadStylesheet('https://ensloadout.911emergensee.com/ens-packages/silver0.css');
+    loadStylesheet('https://ensloadout.911emergensee.com/ens-packages/platinum0.css');
     await loadScript('https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js');
     loadStylesheet('https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css');
     await loadScript('https://ensloadout.911emergensee.com/ens-packages/components/count-bars/cb0.js');
