@@ -1,5 +1,5 @@
 async function createWeatherBar(options) {
-    const { rootDiv, activeData } = options;
+    const { container, activeData, map } = options;
 
     // Mock data set for slice load parameters (all set to true)
     const weatherBarOptions = {
@@ -7,64 +7,13 @@ async function createWeatherBar(options) {
         showPrecipitationSlice: true,
         showCloudCoverSlice: true,
         showWindSlice: true,
-        showEvacuationRoutesSlice: true
+        showEvacuationRoutesSlice: false
     };
 
     // Create the weather bar container
     const weatherBar = document.createElement('div');
     weatherBar.id = 'weatherBar';
-    rootDiv.appendChild(weatherBar);
-
-    // Functions for each slice
-    function createTemperatureSlice() {
-        const tempSlice = document.createElement('div');
-        tempSlice.className = 'weatherSlice';
-        tempSlice.id = 'temperatureSlice';
-
-        // Display temperature and current conditions icon
-        const tempIcon = document.createElement('img');
-        tempIcon.src = 'path/to/temperature-icon.png'; // Replace with actual icon URL
-        tempIcon.alt = 'Current Conditions';
-        tempSlice.appendChild(tempIcon);
-
-        const tempLabel = document.createElement('span');
-        tempLabel.textContent = 'Temperature';
-        tempSlice.appendChild(tempLabel);
-
-        // Clicking the slice shows a dropdown with current and 5-day forecasts
-        tempSlice.onclick = () => {
-            let dropdown = tempSlice.querySelector('.dropdown');
-            if (dropdown) {
-                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-                tempSlice.classList.toggle('active');
-            } else {
-                // Create and populate the dropdown
-                dropdown = document.createElement('div');
-                dropdown.className = 'dropdown';
-
-                // Mock forecast data
-                const forecastData = [
-                    { day: 'Today', temp: '72°F', conditions: 'Sunny' },
-                    { day: 'Tomorrow', temp: '75°F', conditions: 'Partly Cloudy' },
-                    { day: 'Day 3', temp: '70°F', conditions: 'Rain' },
-                    { day: 'Day 4', temp: '68°F', conditions: 'Thunderstorms' },
-                    { day: 'Day 5', temp: '65°F', conditions: 'Cloudy' },
-                ];
-
-                forecastData.forEach(forecast => {
-                    const forecastItem = document.createElement('div');
-                    forecastItem.className = 'forecastItem';
-                    forecastItem.textContent = `${forecast.day}: ${forecast.temp}, ${forecast.conditions}`;
-                    dropdown.appendChild(forecastItem);
-                });
-
-                tempSlice.appendChild(dropdown);
-                tempSlice.classList.add('active');
-            }
-        };
-
-        weatherBar.appendChild(tempSlice);
-    }
+    container.appendChild(weatherBar);
 
     function createPrecipitationSlice() {
         const precipSlice = document.createElement('div');
@@ -119,9 +68,9 @@ async function createWeatherBar(options) {
         windLabel.textContent = 'Wind';
         windSlice.appendChild(windLabel);
     
-        // Display the Windy.com popup on click
+        // Displays a windy popup
         windSlice.onclick = () => {
-            window.showWindPopup();
+            showWindPopup(map); // Pass the map object
             windSlice.classList.toggle('active');
         };
     
@@ -167,15 +116,15 @@ async function createWeatherBar(options) {
         createEvacuationRoutesSlice();
     }
 
-    window.showWindPopup = function() {
+    function showWindPopup(map) {
         // Ensure 'map' is initialized
-        if (!window.map) {
+        if (!map) {
             console.error('Map is not initialized.');
             return;
         }
     
         // Get the current map center coordinates
-        const center = window.map.getCenter();
+        const center = map.getCenter();
         const lat = center.lat.toFixed(3);
         const lon = center.lng.toFixed(3);
     
@@ -209,6 +158,123 @@ async function createWeatherBar(options) {
     
         // Append the overlay to the body
         document.body.appendChild(overlayContainer);
-    };    
+    }
+      
+    async function getForecastUrl(lat, lon) {
+        try {
+            const response = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
+            if (!response.ok) {
+                throw new Error(`Error fetching forecast URL: ${response.status}`);
+            }
+            const data = await response.json();
+            const forecastUrl = data.properties.forecast;
+            return forecastUrl;
+        } catch (error) {
+            console.error('Error fetching forecast URL:', error.message);
+            return null;
+        }
+    }
+
+    function createTemperatureSlice() {
+        const tempSlice = document.createElement('div');
+        tempSlice.className = 'weatherSlice';
+        tempSlice.id = 'temperatureSlice';
+        tempSlice.style.position = 'relative'; // Ensure relative positioning for dropdown
+    
+        // Create a container for icon and temperature
+        const tempContent = document.createElement('div');
+        tempContent.className = 'tempContent';
+    
+        // Elements for temperature and icon
+        const tempIcon = document.createElement('img');
+        tempIcon.alt = 'Current Conditions';
+    
+        const tempLabel = document.createElement('span');
+    
+        // Append icon and label to the tempContent container
+        tempContent.appendChild(tempIcon);
+        tempContent.appendChild(tempLabel);
+    
+        // Append tempContent to the tempSlice
+        tempSlice.appendChild(tempContent);
+    
+        // Variable to store forecast data
+        let forecastData = [];
+    
+        // Fetch and display temperature and icon
+        async function fetchTemperature() {
+            try {
+                // Get the center coordinates from the map
+                const center = map.getCenter();
+                const lat = center.lat.toFixed(4);
+                const lon = center.lng.toFixed(4);
+    
+                // Get the forecast URL
+                const forecastUrl = await getForecastUrl(lat, lon);
+    
+                if (!forecastUrl) {
+                    tempLabel.textContent = 'N/A';
+                    return;
+                }
+    
+                // Fetch the forecast data
+                const response = await fetch(forecastUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+    
+                const weatherData = await response.json();
+                const currentPeriod = weatherData.properties.periods[0];
+    
+                // Display the temperature and icon
+                const temperature = currentPeriod.temperature;
+                const iconUrl = currentPeriod.icon;
+    
+                tempLabel.textContent = `${temperature}°`;
+                tempIcon.src = iconUrl;
+    
+                // Store forecast data for dropdown
+                forecastData = weatherData.properties.periods.slice(0, 5); // Get first 5 periods
+            } catch (error) {
+                console.error('Error fetching temperature:', error.message);
+                tempLabel.textContent = 'N/A';
+            }
+        }
+    
+        // Handle the click event to show the forecast dropdown
+        tempSlice.onclick = () => {
+            if (forecastData.length === 0) {
+                // Data not yet available
+                console.warn('Forecast data not yet available.');
+                return;
+            }
+    
+            let dropdown = tempSlice.querySelector('.dropdown');
+            if (dropdown) {
+                const isVisible = dropdown.style.display === 'block';
+                dropdown.style.display = isVisible ? 'none' : 'block';
+                tempSlice.classList.toggle('active', !isVisible);
+            } else {
+                // Create and populate the dropdown
+                dropdown = document.createElement('div');
+                dropdown.className = 'dropdown';
+    
+                forecastData.forEach(forecast => {
+                    const forecastItem = document.createElement('div');
+                    forecastItem.className = 'forecastItem';
+                    forecastItem.textContent = `${forecast.name}: ${forecast.temperature}°, ${forecast.shortForecast}`;
+                    dropdown.appendChild(forecastItem);
+                });
+    
+                tempSlice.appendChild(dropdown);
+                tempSlice.classList.add('active');
+            }
+        };
+    
+        // Fetch the temperature when the slice is created
+        fetchTemperature();
+    
+        weatherBar.appendChild(tempSlice);
+    }
     
 }

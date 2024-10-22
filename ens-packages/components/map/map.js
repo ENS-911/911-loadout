@@ -10,14 +10,16 @@ let watch = [];
 let weatherData = "";
 
 async function mapRun(options) {
-    const { rootDiv, countyCode, activeData } = options;
+    const { container, countyCode, activeData } = options;
+    let map;
 
     if (!map) {
         // Create and append the map div (only once)
         const mapArea = document.createElement("div");
         mapArea.id = "map";
-        mapArea.style.height = "800px";
-        rootDiv.appendChild(mapArea);
+        mapArea.style.width = '100%';
+        mapArea.style.height = '100%';
+        container.appendChild(mapArea);
 
         mapboxgl.accessToken = 'pk.eyJ1Ijoid29tYmF0MTk3MiIsImEiOiJjbDdycmxjNXIwaTJ1M3BudXB2ZTZoZm1tIn0.v-NAvl8Ba0yPtAtxOt9iTg';  // Replace with your actual Mapbox access token.
 
@@ -97,7 +99,7 @@ async function mapRun(options) {
 
     // Initialize and draw the map (only once)
     function mapDraw() {
-        window.map = new mapboxgl.Map({
+        map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/standard',
             center: [longitude, latitude],
@@ -224,4 +226,5 @@ async function mapRun(options) {
     }
 
     window.updateMap = updateMarkers;
+    return map;
 }

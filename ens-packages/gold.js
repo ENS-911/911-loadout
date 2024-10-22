@@ -1,9 +1,14 @@
-function loadScript(src, callback) {
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = callback;
-    script.onerror = () => console.error(`Error loading script: ${src}`);
-    document.head.appendChild(script);
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = () => {
+            console.error(`Error loading script: ${src}`);
+            reject(new Error(`Script load error for ${src}`));
+        };
+        document.head.appendChild(script);
+    });
 }
 
 function loadStylesheet(href) {
@@ -54,16 +59,24 @@ async function launch() {
     // Initialize count bar
     await createCountBar({ rootDiv });
 
-    await createWeatherBar({
-        rootDiv: rootDiv,
+    const mapContainer = document.createElement('div');
+    mapContainer.id = 'mapContainer';
+    mapContainer.style.width = '100%';
+    mapContainer.style.height = '800px'; // Or any desired height
+    mapContainer.style.position = 'relative'; // Establish positioning context
+    rootDiv.appendChild(mapContainer);
+
+    // Initialize the map
+    const map = await mapRun({
+        container: mapContainer,
+        countyCode: countyCode,
         activeData: activeData
     });
 
-    // Initialize the map
-    await mapRun({
-        rootDiv: rootDiv,
-        countyCode: countyCode,
-        activeData: activeData
+    await createWeatherBar({
+        container: mapContainer,
+        activeData: activeData,
+        map: map
     });
 
     // Create the sort bar
