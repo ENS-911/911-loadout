@@ -257,7 +257,7 @@ async function createWeatherBar(options) {
             } else {
                 // Create and populate the dropdown
                 dropdown = document.createElement('div');
-                dropdown.className = 'dropdown';
+                dropdown.className = 'weatherDropdown';
     
                 forecastData.forEach(forecast => {
                     const forecastItem = document.createElement('div');

@@ -9,7 +9,7 @@
     justify-content: space-between;
     background-color: #333;
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .weatherSlice {
@@ -31,20 +31,7 @@
     background-color: #444;
 }
 
-.weatherSlice img {
-    display: block;
-    margin: 0 auto 5px;
-    width: 36px;
-    height: 36px;
-}
-
-.weatherSlice span {
-    display: block;
-    text-align: center;
-    font-size: 20px;
-}
-
-.weatherSlice .dropdown {
+.weatherSlice .weatherDropdown {
     position: absolute;
     top: 100%;
     left: 0;
@@ -58,7 +45,7 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.weatherSlice.active .dropdown {
+.weatherSlice.active .weatherDropdown {
     display: block;
 }
 
@@ -143,14 +130,15 @@
 }
 
 .tempContent img {
-    width: 36px;
-    height: 36px;
-    margin-right: 5px;
+    width: 40px;
+    height: 40px;
+    padding: 5px;
 }
 
 .tempContent span {
     font-size: 24px;
     color: #fff;
+    padding: 5px;
 }
 
 #overlayContainer {
