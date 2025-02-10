@@ -7,6 +7,7 @@ async function createCountBar(options) {
     try {
         const response = await fetch(`https://matrix.911-ens-services.com/count/${clientID}`);
         const countData = await response.json();
+        currentCount = countData.activeCount
         dayCount = countData.currentDateCount;
         yearCount = countData.totalCount;
         bar()
@@ -23,6 +24,11 @@ async function createCountBar(options) {
     const countWrap = document.createElement("div");
     countBlock.appendChild(countWrap);
     countWrap.className = "countWrap";
+
+    const currentBlock = document.createElement("h3");
+    countWrap.appendChild(currentBlock);
+    currentBlock.innerText = `CURRENT INCIDENTS: ${currentCount}`;
+    currentBlock.className = "countItem";
 
     const dayBlock = document.createElement("h3");
     countWrap.appendChild(dayBlock);
