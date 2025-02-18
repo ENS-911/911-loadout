@@ -41,3 +41,5 @@ async function createCountBar(options) {
     yearBlock.className = "countItem";
     }
 }
+
+window.ENSComponent = createCountBar;
