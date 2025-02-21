@@ -11,29 +11,22 @@
           const data = await response.json();
           console.log("Client Information:", data);
       
-          // Set the global county ID for use in the map
           window.nwsId = data.nws;
       
-          // Retrieve the subscription level and display mode from the API data.
-          const subscription = data.plan;       // e.g., "gold"
-          const displayMode = data.display;       // "single" or "header_split"
+          const subscription = data.plan;
+          const displayMode = data.display;
       
-          // If you’re using a global promise to signal readiness, resolve it here.
           if (window.clientDataReadyResolve) {
             window.clientDataReadyResolve();
           }
       
-          // For single-display mode, load the normal subscription script (e.g., gold.js)
           if (displayMode === "single") {
             loadExternalScriptSingle(subscription);
           }
-          // For header_split mode, load the split head and/or split main scripts as needed.
           else if (displayMode === "header_split") {
-            // Always load the header part on every page
             if (document.getElementById("ENSSplitHead")) {
               loadExternalScriptSplitHead(subscription);
             }
-            // Only load the main split script on the dedicated page if it exists.
             if (document.getElementById("ENSLoadOut")) {
               loadExternalScriptSplit(subscription);
             }
@@ -43,7 +36,6 @@
         }
     }      
   
-    // Load the normal single mode script (e.g., gold.js)
     function loadExternalScriptSingle(subscription) {
       const script = document.createElement("script");
       script.src = `https://ensloadout.911emergensee.com/ens-packages/${subscription}.js`;
@@ -56,7 +48,6 @@
       document.head.appendChild(script);
     }
   
-    // Load the header (split) script (e.g., goldSplitHead.js)
     function loadExternalScriptSplitHead(subscription) {
       const script = document.createElement("script");
       script.src = `https://ensloadout.911emergensee.com/ens-packages/${subscription}SplitHead.js`;
@@ -69,7 +60,6 @@
       document.head.appendChild(script);
     }
   
-    // Load the dedicated (split) main page script (e.g., goldSplit.js)
     function loadExternalScriptSplit(subscription) {
       const script = document.createElement("script");
       script.src = `https://ensloadout.911emergensee.com/ens-packages/${subscription}Split.js`;
@@ -82,7 +72,6 @@
       document.head.appendChild(script);
     }
   
-    // Start the process using the globally defined clientID.
     portalOpen(window.clientID);
   })();
   
