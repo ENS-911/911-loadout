@@ -1,266 +1,145 @@
-/* File: countBarTools.js */
+(function (global, factory) {
+  if (typeof module === "object" && typeof module.exports === "object") {
+    // In a Node/CommonJS environment or bundler that supports modules.
+    module.exports = factory();
+  } else {
+    // Otherwise, attach functions to the global object.
+    const exports = factory();
+    // Attach your component initializer to a global name (for example, ENSComponent)
+    global.ENSComponent = exports.createCountBar;
+    global.getSavedStyles = exports.getSavedStyles;
+  }
+})(typeof window !== "undefined" ? window : this, function () {
 
-window.initializeEditTools = function(toolsContainer) {
-    // --- Default Styles ---
-    const defaultStyles = {
-      container: {
-        padding: "10",
-        backgroundColor: "#222"
-      },
-      currentBlock: {
-        fontSize: "16",
-        textColor: "#000",
-        backgroundColor: "#ffcccc",
-        width: "100",
-        borderThickness: "1",
-        borderColor: "#ccc",
-        borderRadius: "5",
-        padding: "10",
-        margin: "5"
-      },
-      dailyBlock: {
-        fontSize: "16",
-        textColor: "#000",
-        backgroundColor: "#ccffcc",
-        width: "100",
-        borderThickness: "1",
-        borderColor: "#ccc",
-        borderRadius: "5",
-        padding: "10",
-        margin: "5"
-      },
-      yearlyBlock: {
-        fontSize: "16",
-        textColor: "#000",
-        backgroundColor: "#ccccff",
-        width: "100",
-        borderThickness: "1",
-        borderColor: "#ccc",
-        borderRadius: "5",
-        padding: "10",
-        margin: "5"
-      },
-      clock: {
-        show: false,
-        hourFormat: "12",
-        fontSize: "16",
-        textColor: "#000",
-        backgroundColor: "#ddd",
-        borderThickness: "1",
-        borderColor: "#ccc",
-        borderRadius: "5",
-        padding: "10",
-        margin: "5",
-        width: "100"
-      }
-    };
+  // --- Component Code (CB0.js) ---
   
-    // --- Global Settings Object ---
-    window.countBarStyles = {
-      container: Object.assign({}, defaultStyles.container),
-      currentBlock: Object.assign({}, defaultStyles.currentBlock),
-      dailyBlock: Object.assign({}, defaultStyles.dailyBlock),
-      yearlyBlock: Object.assign({}, defaultStyles.yearlyBlock),
-      clock: Object.assign({}, defaultStyles.clock)
-    };
-  
-    // --- Helper: Create a Group of Controls ---
-    // Each group has a title and then for each control a row with two columns:
-    // one for the label (fixed width) and one for the input.
-    function createGroup(groupTitle, targetObj, controls) {
-      const groupContainer = document.createElement("div");
-      groupContainer.className = "tool-group";
-      groupContainer.style.marginBottom = "20px";
-  
-      // Group title.
-      const titleElem = document.createElement("div");
-      titleElem.textContent = groupTitle;
-      titleElem.style.fontWeight = "bold";
-      titleElem.style.marginBottom = "10px";
-      groupContainer.appendChild(titleElem);
-  
-      // For each control, create a row with two columns.
-      controls.forEach(control => {
-        const row = document.createElement("div");
-        row.className = "control-row";
-        // Use CSS Grid for two columns: fixed label and flexible input.
-        row.style.display = "grid";
-        row.style.gridTemplateColumns = "150px 1fr"; // 150px for label, rest for input.
-        row.style.columnGap = "10px";
-        row.style.alignItems = "center";
-        row.style.marginBottom = "8px";
-  
-        // Label column.
-        const labelElem = document.createElement("label");
-        labelElem.textContent = control.label;
-        row.appendChild(labelElem);
-  
-        // Input column.
-        let input;
-        if (control.type === "select") {
-          input = document.createElement("select");
-          control.options.forEach(opt => {
-            const option = document.createElement("option");
-            option.value = opt.value;
-            option.textContent = opt.label;
-            input.appendChild(option);
-          });
-          input.value = targetObj[control.key];
-        } else if (control.type === "checkbox") {
-          input = document.createElement("input");
-          input.type = "checkbox";
-          input.checked = targetObj[control.key];
-        } else {
-          input = document.createElement("input");
-          input.type = control.type; // "number" or "color"
-          input.value = targetObj[control.key];
-          if (control.type === "number") {
-            input.style.width = "60px"; // Use built-in up/down arrows.
-          }
-        }
-  
-        // Use the "input" event for immediate update.
-        input.addEventListener("input", function(e) {
-          let value;
-          if (e.target.type === "checkbox") {
-            value = e.target.checked;
-          } else {
-            value = e.target.value;
-          }
-          targetObj[control.key] = value;
-          updatePreview();
-        });
-  
-        row.appendChild(input);
-        groupContainer.appendChild(row);
-      });
-  
-      return groupContainer;
+  /**
+   * Initializes and renders the Count Bar component.
+   * @param {Object} options - The options for the component.
+   * @param {HTMLElement} options.rootDiv - The container element.
+   * @param {Object} options.styles - A nested style object.
+   */
+  async function createCountBar(options) {
+    const { rootDiv, styles = {} } = options;
+    
+    // Fetch count data.
+    let currentCount = "", dayCount = "", yearCount = "";
+    try {
+      const response = await fetch(`https://matrix.911-ens-services.com/count/${clientID}`);
+      const countData = await response.json();
+      currentCount = countData.activeCount;
+      dayCount = countData.currentDateCount;
+      yearCount = countData.totalCount;
+    } catch (error) {
+      console.error("Error fetching counts:", error.message);
     }
-  
-    // --- Create Groups for Each Settings Category ---
-  
-    // Container Settings.
-    const containerGroup = createGroup("Container Settings", window.countBarStyles.container, [
-      { key: "padding", type: "number", label: "Padding" },
-      { key: "backgroundColor", type: "color", label: "Background Color" }
-    ]);
-    toolsContainer.appendChild(containerGroup);
-  
-    // Current Count Block Settings.
-    const currentGroup = createGroup("Current Count Block Settings", window.countBarStyles.currentBlock, [
-      { key: "fontSize", type: "number", label: "Font Size" },
-      { key: "textColor", type: "color", label: "Text Color" },
-      { key: "backgroundColor", type: "color", label: "Background Color" },
-      { key: "width", type: "number", label: "Width (%)" },
-      { key: "borderThickness", type: "number", label: "Border Thickness" },
-      { key: "borderColor", type: "color", label: "Border Color" },
-      { key: "borderRadius", type: "number", label: "Border Radius" },
-      { key: "padding", type: "number", label: "Padding" },
-      { key: "margin", type: "number", label: "Margin" }
-    ]);
-    toolsContainer.appendChild(currentGroup);
-  
-    // Daily Count Block Settings.
-    const dailyGroup = createGroup("Daily Count Block Settings", window.countBarStyles.dailyBlock, [
-      { key: "fontSize", type: "number", label: "Font Size" },
-      { key: "textColor", type: "color", label: "Text Color" },
-      { key: "backgroundColor", type: "color", label: "Background Color" },
-      { key: "width", type: "number", label: "Width (%)" },
-      { key: "borderThickness", type: "number", label: "Border Thickness" },
-      { key: "borderColor", type: "color", label: "Border Color" },
-      { key: "borderRadius", type: "number", label: "Border Radius" },
-      { key: "padding", type: "number", label: "Padding" },
-      { key: "margin", type: "number", label: "Margin" }
-    ]);
-    toolsContainer.appendChild(dailyGroup);
-  
-    // Yearly Count Block Settings.
-    const yearlyGroup = createGroup("Yearly Count Block Settings", window.countBarStyles.yearlyBlock, [
-      { key: "fontSize", type: "number", label: "Font Size" },
-      { key: "textColor", type: "color", label: "Text Color" },
-      { key: "backgroundColor", type: "color", label: "Background Color" },
-      { key: "width", type: "number", label: "Width (%)" },
-      { key: "borderThickness", type: "number", label: "Border Thickness" },
-      { key: "borderColor", type: "color", label: "Border Color" },
-      { key: "borderRadius", type: "number", label: "Border Radius" },
-      { key: "padding", type: "number", label: "Padding" },
-      { key: "margin", type: "number", label: "Margin" }
-    ]);
-    toolsContainer.appendChild(yearlyGroup);
-  
-    // Clock Settings.
-    const clockGroup = createGroup("Clock Settings", window.countBarStyles.clock, [
-      { key: "show", type: "checkbox", label: "Show Clock" },
-      { key: "hourFormat", type: "select", label: "Hour Format", options: [
-        { value: "12", label: "12-hour" },
-        { value: "24", label: "24-hour" }
-      ] },
-      { key: "fontSize", type: "number", label: "Font Size" },
-      { key: "textColor", type: "color", label: "Text Color" },
-      { key: "backgroundColor", type: "color", label: "Background Color" },
-      { key: "borderThickness", type: "number", label: "Border Thickness" },
-      { key: "borderColor", type: "color", label: "Border Color" },
-      { key: "borderRadius", type: "number", label: "Border Radius" },
-      { key: "padding", type: "number", label: "Padding" },
-      { key: "margin", type: "number", label: "Margin" },
-      { key: "width", type: "number", label: "Width (%)" }
-    ]);
-    toolsContainer.appendChild(clockGroup);
-  
-    // --- Update Preview: Apply CSS Changes Immediately ---
-    function updatePreview() {
-      // Update container styles (element ID: "countBlock")
-      const container = document.getElementById("countBlock");
-      if (container) {
-        container.style.padding = window.countBarStyles.container.padding + "px";
-        container.style.backgroundColor = window.countBarStyles.container.backgroundColor;
-      }
-  
-      // Helper: Update styles for a count block element.
-      function updateBlock(elementId, settings) {
-        const elem = document.getElementById(elementId);
-        if (elem) {
-          // Prevent flexbox interference.
-          elem.style.flex = "none";
-          elem.style.margin = settings.margin + "px";
-          elem.style.padding = settings.padding + "px";
-          elem.style.backgroundColor = settings.backgroundColor;
-          elem.style.border = settings.borderThickness + "px solid " + settings.borderColor;
-          elem.style.borderRadius = settings.borderRadius + "px";
-          elem.style.width = settings.width + "%";
-          // Update inner text styling (assumes an <h3> exists)
-          const h3 = elem.querySelector("h3");
-          if (h3) {
-            h3.style.fontSize = settings.fontSize + "px";
-            h3.style.color = settings.textColor;
-          }
-        }
-      }
-  
-      updateBlock("currentCount", window.countBarStyles.currentBlock);
-      updateBlock("dailyCount", window.countBarStyles.dailyBlock);
-      updateBlock("yearlyCount", window.countBarStyles.yearlyBlock);
-  
-      // Update clock element styles (element ID: "liveClock")
-      const clockElem = document.getElementById("liveClock");
-      if (clockElem) {
-        clockElem.style.display = window.countBarStyles.clock.show ? "flex" : "none";
-        clockElem.style.margin = window.countBarStyles.clock.margin + "px";
-        clockElem.style.padding = window.countBarStyles.clock.padding + "px";
-        clockElem.style.backgroundColor = window.countBarStyles.clock.backgroundColor;
-        clockElem.style.border = window.countBarStyles.clock.borderThickness + "px solid " + window.countBarStyles.clock.borderColor;
-        clockElem.style.borderRadius = window.countBarStyles.clock.borderRadius + "px";
-        clockElem.style.width = window.countBarStyles.clock.width + "%";
-        const h3 = clockElem.querySelector("h3");
-        if (h3) {
-          h3.style.fontSize = window.countBarStyles.clock.fontSize + "px";
-          h3.style.color = window.countBarStyles.clock.textColor;
-        }
-      }
+    
+    // Clear previous content.
+    rootDiv.innerHTML = "";
+    
+    // Create the main container.
+    const container = document.createElement("div");
+    container.id = "countBlock";
+    container.style.width = "100%";
+    container.style.display = "flex";
+    container.style.justifyContent = "space-around";
+    container.style.alignItems = "center";
+    container.style.padding = styles.container?.padding ? styles.container.padding + "px" : "10px";
+    container.style.backgroundColor = styles.container?.backgroundColor || "#222";
+    rootDiv.appendChild(container);
+    
+    // Create an inner wrapper.
+    const countWrap = document.createElement("div");
+    countWrap.style.display = "flex";
+    countWrap.style.justifyContent = "space-around";
+    countWrap.style.width = "100%";
+    container.appendChild(countWrap);
+    
+    // Helper to create a section.
+    function createSection(id, text, sectionStyle, defaultBg) {
+      const section = document.createElement("div");
+      section.id = id;
+      section.style.flex = "none"; // allow custom width.
+      section.style.margin = sectionStyle?.margin ? sectionStyle.margin + "px" : "5px";
+      section.style.padding = sectionStyle?.padding ? sectionStyle.padding + "px" : "10px";
+      section.style.borderRadius = sectionStyle?.borderRadius ? sectionStyle.borderRadius + "px" : "5px";
+      section.style.border = sectionStyle?.borderThickness
+        ? sectionStyle.borderThickness + "px solid " + (sectionStyle.borderColor || "#ccc")
+        : "1px solid #ccc";
+      section.style.backgroundColor = sectionStyle?.backgroundColor || defaultBg;
+      section.style.width = sectionStyle?.width ? sectionStyle.width + "%" : "100%";
+    
+      const textElem = document.createElement("h3");
+      textElem.innerText = text;
+      textElem.style.fontSize = sectionStyle?.fontSize ? sectionStyle.fontSize + "px" : "16px";
+      textElem.style.color = sectionStyle?.textColor || "#000";
+      section.appendChild(textElem);
+      return section;
     }
+    
+    // Create independent blocks.
+    countWrap.appendChild(
+      createSection("currentCount", `CURRENT INCIDENTS: ${currentCount}`, styles.currentBlock, "#ffcccc")
+    );
+    countWrap.appendChild(
+      createSection("dailyCount", `DAILY TOTAL INCIDENTS: ${dayCount}`, styles.dailyBlock, "#ccffcc")
+    );
+    countWrap.appendChild(
+      createSection("yearlyCount", `YEARLY INCIDENTS: ${yearCount}`, styles.yearlyBlock, "#ccccff")
+    );
+    
+    // Optional clock.
+    if (styles.clock?.show) {
+      const clockSection = document.createElement("div");
+      clockSection.id = "liveClock";
+      clockSection.style.flex = "none";
+      clockSection.style.margin = styles.clock.margin ? styles.clock.margin + "px" : "5px";
+      clockSection.style.padding = styles.clock.padding ? styles.clock.padding + "px" : "10px";
+      clockSection.style.borderRadius = styles.clock.borderRadius ? styles.clock.borderRadius + "px" : "5px";
+      clockSection.style.border = styles.clock.borderThickness
+        ? styles.clock.borderThickness + "px solid " + (styles.clock.borderColor || "#ccc")
+        : "1px solid #ccc";
+      clockSection.style.backgroundColor = styles.clock.backgroundColor || "#ddd";
+      clockSection.style.width = styles.clock.width ? styles.clock.width + "%" : "100%";
+    
+      const clockText = document.createElement("h3");
+      clockText.style.fontSize = styles.clock.fontSize ? styles.clock.fontSize + "px" : "16px";
+      clockText.style.color = styles.clock.textColor || "#000";
+      clockSection.appendChild(clockText);
+      countWrap.appendChild(clockSection);
+    
+      function updateClock() {
+        const now = new Date();
+        const options = { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: (styles.clock.hourFormat !== "24") };
+        clockText.innerText = now.toLocaleTimeString([], options);
+      }
+      updateClock();
+      setInterval(updateClock, 1000);
+    }
+    getSavedStyles(clientKey);
+  }
+
+  const clientKey = window.clientID
   
-    // --- Initial CSS Application ---
-    updatePreview();
-  };
+  /**
+   * Retrieves the saved style settings for a given client.
+   * @param {string} clientKey - The unique client key.
+   * @returns {Promise<Object|null>} The saved style settings or null.
+   */
+  async function getSavedStyles(clientKey) {
+    try {
+      const response = await fetch(`https://matrix.911-ens-services.com/client/${clientKey}/countbar_styles`);
+      if (!response.ok) {
+        console.error("Failed to load saved styles:", response.statusText);
+        return null;
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error retrieving saved styles:", error);
+      return null;
+    }
+  }
   
+  // Return the public API.
+  return { createCountBar, getSavedStyles };
+});
