@@ -13,25 +13,36 @@ console.log('working to get the key', clientKey)
 async function createCountBar(options) {
   const { rootDiv, styles = {} } = options;
   
-  // Try to load saved styles from the server.
   if (!window.countBarStylesLoaded) {
-    // Fetch code…
     try {
       const response = await fetch(`https://matrix.911-ens-services.com/client/${clientKey}/countbar_styles`);
       if (response.ok) {
         const savedStyles = await response.json();
-        window.countBarStyles = savedStyles || styles;
+        if (savedStyles) {
+          console.log("Loaded saved styles:", savedStyles);
+          window.countBarStyles = savedStyles;
+        } else {
+          console.log("No saved styles found; using provided defaults.");
+          window.countBarStyles = styles;
+        }
       } else {
+        console.warn("GET countbar_styles returned non-OK status; using defaults.");
         window.countBarStyles = styles;
       }
     } catch (error) {
+      console.error("Error fetching saved styles:", error);
       window.countBarStyles = styles;
     }
     window.countBarStylesLoaded = true;
-  }
+  }  
+  
+  // ... (rest of your rendering code remains unchanged) ...
+  rootDiv.innerHTML = "";
+  // Dispatch the event once after rendering:
+  
   
   // Now that window.countBarStyles is set (either saved or default), render the component.
-  rootDiv.innerHTML = ""; // Clear previous content
+   // Clear previous content
   
   // Create the main container.
   const container = document.createElement("div");
