@@ -6,11 +6,9 @@
  * @param {Object} [options.styles] - Optional default styles if no saved settings exist.
  */
 
-const clientKey = window.clientID;
-
-console.log('working to get the key', clientKey)
-
 async function createCountBar(options) {
+  const clientKey = window.clientID;
+  console.log('the key from cb0: ', clientKey)
   const { rootDiv, styles = {} } = options;
   
   if (!window.countBarStylesLoaded) {
@@ -35,16 +33,9 @@ async function createCountBar(options) {
     }
     window.countBarStylesLoaded = true;
   }  
-  
-  // ... (rest of your rendering code remains unchanged) ...
+
   rootDiv.innerHTML = "";
-  // Dispatch the event once after rendering:
   
-  
-  // Now that window.countBarStyles is set (either saved or default), render the component.
-   // Clear previous content
-  
-  // Create the main container.
   const container = document.createElement("div");
   container.id = "countBlock";
   container.style.width = "100%";
@@ -78,6 +69,7 @@ async function createCountBar(options) {
     textElem.innerText = text;
     textElem.style.fontSize = blockStyles.fontSize + "px";
     textElem.style.color = blockStyles.textColor;
+    textElem.style.textAlign = blockStyles.textAlign || "center";
     section.appendChild(textElem);
     return section;
   }
