@@ -144,6 +144,6 @@ function getCurrentStyles() {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { createCountBar, getCurrentStyles };
 } else {
-  window.ENSComponent = createCountBar;
-  window.getCurrentStyles = getCurrentStyles;
+  window.ENSComponent_countBar = createCountBar;
+  window.getCurrentStyles_countBar = getCurrentStyles;
 }

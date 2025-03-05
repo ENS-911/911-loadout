@@ -9,16 +9,75 @@ let warningData = [];
 let watch = [];
 let weatherData = "";
 
-async function mapRun(options) {
-    const { container, countyCode, activeData } = options;
-    let map;
+function loadScript(url) {
+    return new Promise((resolve, reject) => {
+      // Check if the script is already loaded
+      if (document.querySelector(`script[src="${url}"]`)) {
+        resolve();
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = url;
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`Failed to load script: ${url}`));
+      document.head.appendChild(script);
+    });
+}
+  
+async function loadDependencies() {
+    // Ensure Mapbox GL JS is loaded before proceeding.
+    if (typeof mapboxgl === "undefined") {
+      await loadScript("https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js");
+      // Optionally, load the Mapbox GL CSS as well.
+      if (!document.querySelector('link[href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css"]')) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css";
+        document.head.appendChild(link);
+      }
+    }
+}
+  
+function waitForGlobalData(timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      (function check() {
+        console.log("Waiting for global data:", window.clientData, window.mainData);
+        if (window.clientData && window.mainData) {
+          resolve();
+        } else if (Date.now() - start > timeout) {
+          reject(new Error("Global data not available within timeout"));
+        } else {
+          setTimeout(check, 100);
+        }
+      })();
+    });
+}  
 
+async function mapRun(options) {
+    try {
+        await waitForGlobalData();
+      } catch (err) {
+        console.error(err);
+        return;
+      }
+    let map;
+    const { countyCode = window.clientData?.nws, activeData = window.mainData } = options;
+    const container = options.container || options.rootDiv;
+    if (!container) {
+        console.error("No container provided for mapRun");
+        return;
+    }
+
+    await loadDependencies();
+    
     if (!map) {
-        // Create and append the map div (only once)
         const mapArea = document.createElement("div");
         mapArea.id = "map";
         mapArea.style.width = '100%';
-        mapArea.style.height = '100%';
+        // Set a default height of 800px if no height is provided via options:
+        mapArea.style.height = (options && options.height) ? options.height : '800px';
         container.appendChild(mapArea);
 
         mapboxgl.accessToken = 'pk.eyJ1Ijoid29tYmF0MTk3MiIsImEiOiJjbDdycmxjNXIwaTJ1M3BudXB2ZTZoZm1tIn0.v-NAvl8Ba0yPtAtxOt9iTg';  // Replace with your actual Mapbox access token.
@@ -228,3 +287,5 @@ async function mapRun(options) {
     window.updateMap = updateMarkers;
     return map;
 }
+
+window.ENSComponent_mapBox = mapRun;
